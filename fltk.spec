@@ -6,7 +6,7 @@
 Summary:	C++ user interface toolkit
 Name:		fltk
 Version:	1.3.0
-Release:	10%{?dist}
+Release:	13%{?dist}
 
 # see COPYING (or http://www.fltk.org/COPYING.php ) for exceptions details
 License:	LGPLv2+ with exceptions	
@@ -128,6 +128,8 @@ sed -i.silent '\,^.SILENT:,d' makeinclude.in
 
 %build
 
+autoconf
+
 # using --with-optim, so unset CFLAGS/CXXFLAGS
 export CFLAGS=" "
 export CXXFLAGS=" "
@@ -231,6 +233,15 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 1.3.0-13
+- Mass rebuild 2014-01-24
+
+* Tue Jan 07 2014 Petr Hracek <phracek@redhat.com> - 1.3.0-12
+- Resolves: #1048857 fltk does not build on RHEL7
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.3.0-11
+- Mass rebuild 2013-12-27
+
 * Wed Feb 13 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.3.0-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
@@ -291,7 +302,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 * Tue Sep 07 2010 Rex Dieter <rdieter@fedoraproject.org> - 1.1.10-2
 - drop BR: man , fixes FTBFS (#631212)
 
-* Sun Feb 10 2010 Rex Dieter <rdieter@fedoraproject.org> - 1.1.10-1
+* Sun Feb 14 2010 Rex Dieter <rdieter@fedoraproject.org> - 1.1.10-1
 - fltk-1.1.10
 - FTBFS fltk-1.1.10-0.1.rc3.fc13: ImplicitDSOLinking (#564877)
 
@@ -326,7 +337,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 * Sat Mar 29 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-1
 - fltk-1.1.8 (final)
 
-* Tue Feb 29 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.8.r6027
+* Tue Feb 19 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.8.r6027
 - fltk-1.1.x-r6027
 
 * Mon Feb 11 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.7.r5989 
@@ -397,7 +408,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 * Thu Aug 18 2005 Ignacio Vazquez-Abrams <ivazquez@ivazquez.net> 1.1.4-10
 - Fixed BR/Requires for x86_64
 
-* Fri Apr  7 2005 Michael Schwendt <mschwendt[AT]users.sf.net>
+* Wed Apr  6 2005 Michael Schwendt <mschwendt[AT]users.sf.net>
 - rebuilt
 
 * Thu Nov 20 2003 Dams <anvil[AT]livna.org> 0:1.1.4-0.fdr.8
