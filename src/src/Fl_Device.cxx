@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_Device.cxx 9293 2012-03-18 18:48:29Z manolo $"
+// "$Id: Fl_Device.cxx 10970 2015-12-16 07:18:34Z manolo $"
 //
 // implementation of Fl_Device class for the Fast Light Tool Kit (FLTK).
 //
@@ -26,6 +26,9 @@ const char *Fl_Display_Device::class_id = "Fl_Display_Device";
 const char *Fl_Graphics_Driver::class_id = "Fl_Graphics_Driver";
 #if defined(__APPLE__) || defined(FL_DOXYGEN)
 const char *Fl_Quartz_Graphics_Driver::class_id = "Fl_Quartz_Graphics_Driver";
+#  ifndef FL_DOXYGEN
+   bool Fl_Display_Device::high_res_window_ = false;
+#  endif
 #endif
 #if defined(WIN32) || defined(FL_DOXYGEN)
 const char *Fl_GDI_Graphics_Driver::class_id = "Fl_GDI_Graphics_Driver";
@@ -36,7 +39,8 @@ const char *Fl_Xlib_Graphics_Driver::class_id = "Fl_Xlib_Graphics_Driver";
 #endif
 
 
-/** \brief Use this drawing surface for future graphics requests. */
+/** \brief Make this surface the current drawing surface.
+ This surface will receive all future graphics requests. */
 void Fl_Surface_Device::set_current(void)
 {
   fl_graphics_driver = _driver;
@@ -69,33 +73,35 @@ void Fl_Graphics_Driver::text_extents(const char*t, int n, int& dx, int& dy, int
   dy = descent();
 }
 
-Fl_Display_Device::Fl_Display_Device(Fl_Graphics_Driver *graphics_driver) : Fl_Surface_Device( graphics_driver) {
-#ifdef __APPLE__
-  SInt32 versionMajor = 0;
-  SInt32 versionMinor = 0;
-  SInt32 versionBugFix = 0;
-  SInt32 version;
-  Gestalt( gestaltSystemVersion, &version);
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-  if (version >= 0x1040) {
-    Gestalt( gestaltSystemVersionMajor, &versionMajor );
-    Gestalt( gestaltSystemVersionMinor, &versionMinor );
-    Gestalt( gestaltSystemVersionBugFix, &versionBugFix );
-    }
-  else {
-#endif
-    versionMajor = 10;
-    versionMinor = (version / 0x10) % 0x10;
-    versionBugFix = version % 0x10;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-    }
-#endif
-  fl_mac_os_version = versionMajor * 10000 + versionMinor * 100 + versionBugFix;
-#endif
-this->set_current();
+/**  A constructor that sets the graphics driver used by the display */
+Fl_Display_Device::Fl_Display_Device(Fl_Graphics_Driver *graphics_driver) : Fl_Surface_Device(graphics_driver) {
+  this->set_current();
 };
 
 
+/** Returns the platform display device. */
+Fl_Display_Device *Fl_Display_Device::display_device() {
+  static Fl_Display_Device *display = new Fl_Display_Device(new
+#if defined(__APPLE__)
+                                                                  Fl_Quartz_Graphics_Driver
+#elif defined(WIN32)
+                                                                  Fl_GDI_Graphics_Driver
+#else
+                                                                  Fl_Xlib_Graphics_Driver
+#endif
+                                                                 );
+  return display;
+};
+
+
+Fl_Surface_Device *Fl_Surface_Device::default_surface()
+{
+  return Fl_Display_Device::display_device();
+}
+
+
+Fl_Display_Device *Fl_Display_Device::_display = Fl_Display_Device::display_device();
+
 //
-// End of "$Id: Fl_Device.cxx 9293 2012-03-18 18:48:29Z manolo $".
+// End of "$Id: Fl_Device.cxx 10970 2015-12-16 07:18:34Z manolo $".
 //

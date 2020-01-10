@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_Box.H 9637 2012-07-24 04:37:22Z matt $"
+// "$Id: Fl_Box.H 9672 2012-08-17 09:18:06Z manolo $"
 //
 // Box header file for the Fast Light Tool Kit (FLTK).
 //
@@ -27,7 +27,7 @@
 #endif
 
 /**
-  This widget simply draws its box, and possibly it's label.  Putting it
+  This widget simply draws its box, and possibly its label.  Putting it
   before some other widgets and making it big enough to surround them
   will let you draw a frame around them.
 */
@@ -55,5 +55,5 @@ public:
 #endif
 
 //
-// End of "$Id: Fl_Box.H 9637 2012-07-24 04:37:22Z matt $".
+// End of "$Id: Fl_Box.H 9672 2012-08-17 09:18:06Z manolo $".
 //

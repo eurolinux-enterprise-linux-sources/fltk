@@ -1,68 +1,26 @@
-%global		snap r9671
 
-# TODO:
-# *  port .spec to use cmake
-
-Summary:	C++ user interface toolkit
-Name:		fltk
-Version:	1.3.0
-Release:	13%{?dist}
+Summary:    C++ user interface toolkit
+Name:       fltk
+Version:    1.3.4
+Release:    1%{?dist}
 
 # see COPYING (or http://www.fltk.org/COPYING.php ) for exceptions details
-License:	LGPLv2+ with exceptions	
-Group:		System Environment/Libraries
-URL:		http://www.fltk.org/
-%if "%{?snap:1}" == "1"
-Source0:        http://ftp.easysw.com/pub/fltk/snapshots/fltk-1.3.x-%{snap}.tar.bz2
-%else
-Source0:	http://ftp.easysw.com/pub/fltk/%{version}%{?pre}/%{name}-%{version}%{?pre}-source.tar.gz
-%endif
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
-Source1: fltk-config.sh
+License:    LGPLv2+ with exceptions
+URL:        http://www.fltk.org/
+Source0:    http://fltk.org/pub/fltk/%{version}/%{name}-%{version}-1-source.tar.gz
+Source1:    fltk-config.sh
 
 ## FIXME/TODO: upstream these asap -- Rex
-Patch1:        	fltk-1.1.9-fltk_config.patch 
-# libfltk_gl.so had undefined symbols
-Patch3: 	fltk-1.1.x-r5750-undefined.patch
-Patch5: 	fltk-1.1.8-fluid_desktop.patch
-Patch8:         fltk-1.3.0-rh708185.patch
-
-# http://www.fltk.org/str.php?L2599
-Patch9:         fltk-1_v4.3.x-keyboard-x11.patch
-
-# http://www.fltk.org/str.php?L2636
-Patch10:        fltk-1_v2.3.x-clipboard.patch
-Patch11:        fltk-1_v2.3.x-clipboard-x11.patch
-Patch12:        fltk-1_v3.3.x-clipboard-xfixes.patch
-
-# http://www.fltk.org/str.php?L2660
-Patch13:        fltk-1_v4.3.x-cursor.patch
-Patch20:        fltk-1_v4.3.x-cursor-abi.patch
-
-# http://www.fltk.org/str.php?L2859
-Patch14:        fltk-1.3.x-resize-expose.patch
-
-# http://www.fltk.org/str.php?L2659
-Patch15:        pixmap.patch
-
-# http://www.fltk.org/str.php?L2802
-Patch16:        fltk-1_v2.3.0-modal.patch
-
-# http://www.fltk.org/str.php?L2816
-Patch17:        fltk-1_v2.3.0-icons.patch
-
-# http://www.fltk.org/str.php?L2860
-Patch18:        fltk-1.3.x-screen_num.patch
-Patch19:        fltk-1_v2.3.x-multihead.patch
+Patch1:     fltk-1.3.4-fltk_config.patch
+Patch2:     fltk-1.3.4-fluid.patch
 
 BuildRequires: desktop-file-utils
 BuildRequires: libjpeg-devel
 BuildRequires: pkgconfig(libpng)
-BuildRequires: pkgconfig(gl) pkgconfig(glu) 
+BuildRequires: pkgconfig(gl) pkgconfig(glu)
 BuildRequires: pkgconfig(ice)
-BuildRequires: pkgconfig(sm) 
-BuildRequires: pkgconfig(xext) pkgconfig(xinerama) pkgconfig(xft) pkgconfig(xt) pkgconfig(x11) 
+BuildRequires: pkgconfig(sm)
+BuildRequires: pkgconfig(xext) pkgconfig(xinerama) pkgconfig(xft) pkgconfig(xt) pkgconfig(x11)
 BuildRequires: pkgconfig(xcursor)
 BuildRequires: pkgconfig(xproto)
 BuildRequires: xorg-x11-utils
@@ -95,44 +53,23 @@ Summary: Fast Light User Interface Designer
 Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: %{name}-devel
 %description fluid
-%{summary}, an interactive GUI designer for %{name}. 
+%{summary}, an interactive GUI designer for %{name}.
 
 
 %prep
-%if 0%{?snap:1}
-%setup -q -n fltk-1.3.x-%{snap}
-%else
-%setup -q  -n fltk-%{version}%{?pre}
-%endif
+%setup -q  -n fltk-%{version}-1
 
 %patch1 -p1 -b .fltk_config
-%patch3 -p1 -b .undefined
-%patch5 -p1 -b .fluid_desktop
-%patch8 -p1 -b .rh708185
-%patch9 -p1 -b .deadkeys
-%patch10 -p1 -b .clipboard1
-%patch11 -p1 -b .clipboard2
-%patch12 -p1 -b .clipboard3
-%patch13 -p1 -b .cursor
-%patch20 -p1 -b .cursor-abi
-%patch14 -p1 -b .resize-expose
-%patch15 -p0 -b .pixmap
-%patch16 -p1 -b .modal
-%patch17 -p1 -b .icons
-%patch18 -p1 -b .screen_num
-%patch19 -p1 -b .multihead
+%patch2 -p1 -b .fluid
 
 # verbose build output
 sed -i.silent '\,^.SILENT:,d' makeinclude.in
-
+autoconf
 
 %build
 
-autoconf
-
-# using --with-optim, so unset CFLAGS/CXXFLAGS
-export CFLAGS=" "
-export CXXFLAGS=" "
+# set DSOFLAGS too, used to link shlibs (LDFLAGS used only for static libs)
+%{?__global_ldflags:DSOFLAGS="%{__global_ldflags}" ; export DSOFLAGS}
 
 %configure \
   --with-links \
@@ -149,9 +86,9 @@ make %{?_smp_mflags}
 
 %install
 
-make install install-desktop DESTDIR=$RPM_BUILD_ROOT 
+make install install-desktop DESTDIR=$RPM_BUILD_ROOT
 
-# omit examples/games: 
+# omit examples/games:
 make -C test uninstall-linux DESTDIR=$RPM_BUILD_ROOT
 rm -f  $RPM_BUILD_ROOT%{_mandir}/man?/{blocks,checkers,sudoku}*
 
@@ -180,7 +117,6 @@ desktop-file-validate $RPM_BUILD_ROOT%{_datadir}/applications/fluid.desktop
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %doc ANNOUNCEMENT CHANGES COPYING CREDITS README
 %{_libdir}/libfltk.so.1.3
 %{_libdir}/libfltk_forms.so.1.3
@@ -188,7 +124,6 @@ desktop-file-validate $RPM_BUILD_ROOT%{_datadir}/applications/fluid.desktop
 %{_libdir}/libfltk_images.so.1.3
 
 %files devel
-%defattr(-,root,root,-)
 %doc __docs/*
 %{_bindir}/fltk-config
 %{?arch:%{_bindir}/fltk-config-%{arch}}
@@ -202,7 +137,6 @@ desktop-file-validate $RPM_BUILD_ROOT%{_datadir}/applications/fluid.desktop
 %{_mandir}/man3/fltk.3*
 
 %files static
-%defattr(-,root,root,-)
 %{_libdir}/libfltk.a
 %{_libdir}/libfltk_forms.a
 %{_libdir}/libfltk_gl.a
@@ -223,16 +157,16 @@ update-desktop-database -q &> /dev/null
 gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 
 %files fluid
-%defattr(-,root,root,-)
 %{_bindir}/fluid
 %{_mandir}/man1/fluid.1*
 %{_datadir}/applications/fluid.desktop
 %{_datadir}/icons/hicolor/*/*/*
-# FIXME, add according to new mime spec
-%{_datadir}/mimelnk/*/*.desktop
 
 
 %changelog
+* Wed Feb 22 2017 Jan Grulich <jgrulich@redhat.com> - 1.3.4-1
+- Re-base to 1.3.4 (+ sync with Fedora)
+
 * Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 1.3.0-13
 - Mass rebuild 2014-01-24
 
@@ -340,7 +274,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &> /dev/null || :
 * Tue Feb 19 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.8.r6027
 - fltk-1.1.x-r6027
 
-* Mon Feb 11 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.7.r5989 
+* Mon Feb 11 2008 Rex Dieter <rdieter@fedoraproject.org> 1.1.8-0.7.r5989
 - respin (gcc43)
 
 * Wed Dec 12 2007 Rex Dieter <rdieter[AT]fedoraproject.org> 1.1.8-0.6.r5989

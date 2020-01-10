@@ -1,5 +1,5 @@
 /*
- * "$Id: filename.H 9581 2012-06-10 09:38:29Z manolo $"
+ * "$Id: filename.H 9704 2012-10-19 11:23:51Z manolo $"
  *
  * Filename header file for the Fast Light Tool Kit (FLTK).
  *
@@ -14,6 +14,9 @@
  * Please report all bugs and problems on the following page:
  *
  *     http://www.fltk.org/str.php
+ */
+/** \file
+ File names and URI utility functions.
  */
 
 /* Xcode on OS X includes files by recursing down into directories.
@@ -169,5 +172,5 @@ int _fl_filename_isdir_quick(const char *name);
 /** @} */
 
 /*
- * End of "$Id: filename.H 9581 2012-06-10 09:38:29Z manolo $".
+ * End of "$Id: filename.H 9704 2012-10-19 11:23:51Z manolo $".
  */

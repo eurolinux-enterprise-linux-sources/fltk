@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_BMP_Image.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: Fl_BMP_Image.cxx 10751 2015-06-14 17:07:31Z AlbrechtS $"
 //
 // Fl_BMP_Image routines.
 //
@@ -27,6 +27,7 @@
 
 #include <FL/Fl_BMP_Image.H>
 #include <FL/fl_utf8.h>
+#include <FL/Fl.H>
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,13 +52,19 @@
 static int		read_long(FILE *fp);
 static unsigned short	read_word(FILE *fp);
 static unsigned int	read_dword(FILE *fp);
-/** 
-  The constructor loads the named BMP image from the given bmp filename.  
-  <P>The inherited destructor free all memory and server resources that are used by
-  the image.
-  <P>The destructor free all memory and server resources that are used by
-  the image
-*/
+
+
+/**
+ The constructor loads the named BMP image from the given bmp filename.
+
+ The destructor frees all memory and server resources that are used by
+ the image.
+
+ Use Fl_Image::fail() to check if Fl_BMP_Image failed to load. fail() returns
+ ERR_FILE_ACCESS if the file could not be opened or read, ERR_FORMAT if the
+ BMP format could not be decoded, and ERR_NO_IMAGE if the image could not
+ be loaded for another reason.
+ */
 Fl_BMP_Image::Fl_BMP_Image(const char *bmp) // I - File to read
   : Fl_RGB_Image(0,0,0) {
   FILE		*fp;		// File pointer
@@ -85,13 +92,17 @@ Fl_BMP_Image::Fl_BMP_Image(const char *bmp) // I - File to read
 
 
   // Open the file...
-  if ((fp = fl_fopen(bmp, "rb")) == NULL) return;
+  if ((fp = fl_fopen(bmp, "rb")) == NULL) {
+    ld(ERR_FILE_ACCESS);
+    return;
+  }
 
   // Get the header...
   byte = (uchar)getc(fp);	// Check "BM" sync chars
   bit  = (uchar)getc(fp);
   if (byte != 'B' || bit != 'M') {
     fclose(fp);
+    ld(ERR_FORMAT);
     return;
   }
 
@@ -160,6 +171,7 @@ Fl_BMP_Image::Fl_BMP_Image(const char *bmp) // I - File to read
   // Check header data...
   if (!w() || !h() || !depth) {
     fclose(fp);
+    w(0); h(0); d(0); ld(ERR_FORMAT);
     return;
   }
 
@@ -187,6 +199,12 @@ Fl_BMP_Image::Fl_BMP_Image(const char *bmp) // I - File to read
   d(bDepth);
   if (offbits) fseek(fp, offbits, SEEK_SET);
 
+  if (((size_t)w()) * h() * d() > max_size() ) {
+    Fl::warning("BMP file \"%s\" is too large!\n", bmp);
+    fclose(fp);
+    w(0); h(0); d(0); ld(ERR_FORMAT);
+    return;
+  }
   array = new uchar[w() * h() * d()];
   alloc_array = 1;
 
@@ -482,5 +500,5 @@ read_long(FILE *fp) {		// I - File to read from
 
 
 //
-// End of "$Id: Fl_BMP_Image.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: Fl_BMP_Image.cxx 10751 2015-06-14 17:07:31Z AlbrechtS $".
 //

@@ -1,5 +1,5 @@
 //
-// "$Id: tree-of-tables.cxx 9405 2012-04-27 02:11:37Z greg.ercolano $"
+// "$Id: tree-of-tables.cxx 10040 2014-01-01 17:13:48Z greg.ercolano $"
 //
 //	Fl_Tree as a container of Fl_Table's. - erco 04/25/2012
 //
@@ -29,11 +29,11 @@
 #define PI 3.14159
 #endif
 
-#if FLTK_ABI_VERSION >= 10302
+#if FLTK_ABI_VERSION >= 10301
 class MyTable : public Fl_Table {
-  char *mode;
+  const char *mode;
 public:
-  MyTable(int X,int Y,int W,int H,char *mode) : Fl_Table(X,Y,W,H) {
+  MyTable(int X,int Y,int W,int H,const char *mode) : Fl_Table(X,Y,W,H) {
     rows(11); row_height_all(20); row_header(1);
     cols(11); col_width_all(60);  col_header(1);
     col_resize(1);				// enable column resizing
@@ -151,5 +151,5 @@ int main(int argc, char *argv[]) {
 #endif
 
 //
-// End of "$Id: tree-of-tables.cxx 9405 2012-04-27 02:11:37Z greg.ercolano $".
+// End of "$Id: tree-of-tables.cxx 10040 2014-01-01 17:13:48Z greg.ercolano $".
 //

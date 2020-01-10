@@ -1,5 +1,5 @@
 //
-// "$Id: unittest_scrollbarsize.cxx 9345 2012-04-14 20:35:56Z greg.ercolano $"
+// "$Id: unittest_scrollbarsize.cxx 9706 2012-11-06 20:46:14Z matt $"
 //
 // Unit tests for the Fast Light Tool Kit (FLTK).
 //
@@ -126,7 +126,7 @@ class ScrollBarSizeTest : public Fl_Group {
 	if ( strcmp(label,"A: Scroll Size") == 0 ) {
 	    brow_a->scrollbar_size(val);
 	    tree_a->scrollbar_size(val);
-#if FLTK_ABI_VERSION >= 10302
+#if FLTK_ABI_VERSION >= 10301
 	    // NEW
 	    table_a->scrollbar_size(val);
 #endif
@@ -206,7 +206,7 @@ public:
 	    "Scrollbar's size should change interactively as size sliders are changed.\n"
             "Changing 'Global Scroll Size' should affect all three browser's scrollbars UNLESS\n"
 	    "the 'A: Scroll Size' slider is changed, in which case its value will take precedence\n"
-#if FLTK_ABI_VERSION >= 10302
+#if FLTK_ABI_VERSION >= 10301
 	    "for the 'A' group of widgets.");
 #else
 	    "for the 'A' group of widgets. (NOTE: 'table_a' does not currently support this)");
@@ -219,5 +219,5 @@ public:
 UnitTest scrollbarsize("scrollbar size", ScrollBarSizeTest::create);
 
 //
-// End of "$Id: unittest_scrollbarsize.cxx 9345 2012-04-14 20:35:56Z greg.ercolano $"
+// End of "$Id: unittest_scrollbarsize.cxx 9706 2012-11-06 20:46:14Z matt $"
 //

@@ -1,9 +1,9 @@
 //
-// "$Id: Fl_Browser_.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: Fl_Browser_.cxx 11849 2016-07-29 09:23:44Z AlbrechtS $"
 //
 // Base Browser widget class for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2016 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -113,6 +113,7 @@ void Fl_Browser_::resize(int X, int Y, int W, int H) {
   hscrollbar.resize(
 	X, scrollbar.align()&FL_ALIGN_TOP ? Y-scrollsize : Y+H,
 	W, scrollsize);
+  max_width = 0;
 }
 
 // Cause minimal update to redraw the given item:
@@ -423,8 +424,9 @@ J1:
     fl_pop_clip();
   }
   fl_pop_clip();
-  redraw1 = redraw2 = 0;
 
+  fl_push_clip(x(),y(),w(),h());		// STR# 2886
+  redraw1 = redraw2 = 0;
   if (!dont_repeat) {
     dont_repeat = 1;
     // see if changes to full_height caused by calls to slow_height
@@ -433,15 +435,15 @@ J1:
     full_width_ = full_width();
     if ((has_scrollbar_ & VERTICAL) &&
 	((has_scrollbar_ & ALWAYS_ON) || position_ || full_height_>H)) {
-      if (!scrollbar.visible()) { damage(FL_DAMAGE_ALL); goto J1; }
+      if (!scrollbar.visible()) { damage(FL_DAMAGE_ALL); fl_pop_clip(); goto J1; }
     } else {
-      if (scrollbar.visible()) { damage(FL_DAMAGE_ALL); goto J1; }
+      if (scrollbar.visible()) { damage(FL_DAMAGE_ALL); fl_pop_clip(); goto J1; }
     }
     if ((has_scrollbar_ & HORIZONTAL) &&
 	((has_scrollbar_ & ALWAYS_ON) || hposition_ || full_width_>W)) {
-      if (!hscrollbar.visible()) { damage(FL_DAMAGE_ALL); goto J1; }
+      if (!hscrollbar.visible()) { damage(FL_DAMAGE_ALL); fl_pop_clip(); goto J1; }
     } else {
-      if (hscrollbar.visible()) { damage(FL_DAMAGE_ALL); goto J1; }
+      if (hscrollbar.visible()) { damage(FL_DAMAGE_ALL); fl_pop_clip(); goto J1; }
     }
   }
 
@@ -474,6 +476,7 @@ J1:
   }
 
   real_hposition_ = hposition_;
+  fl_pop_clip();
 }
 
 // Quick way to delete and reset everything:
@@ -711,9 +714,10 @@ int Fl_Browser_::handle(int event) {
       if (type()==FL_HOLD_BROWSER) {
         switch (Fl::event_key()) {
         case FL_Down:
-          while ((l = item_next(l)))
-            if (item_height(l)>0) {select_only(l, when()); break;}
-            return 1;
+	  while ((l = item_next(l))) {
+	    if (item_height(l)>0) {select_only(l, when()); break;}
+	  }
+	  return 1;
         case FL_Up:
           while ((l = item_prev(l))) {
 	    if (item_height(l)>0) {
@@ -811,7 +815,7 @@ J1:
     } else {
       void* l = find_item(my);
       whichway = 1;
-      if (Fl::event_state(FL_CTRL)) { // toggle selection:
+      if (Fl::event_state(FL_COMMAND)) { // toggle selection:
       TOGGLE:
 	if (l) {
 	  whichway = !item_selected(l);
@@ -1094,5 +1098,5 @@ void Fl_Browser_::item_select(void *item, int val) {}
 int Fl_Browser_::item_selected(void* item) const { return item==selection_ ? 1 : 0; }
 
 //
-// End of "$Id: Fl_Browser_.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: Fl_Browser_.cxx 11849 2016-07-29 09:23:44Z AlbrechtS $".
 //

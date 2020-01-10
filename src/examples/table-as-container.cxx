@@ -1,5 +1,5 @@
 //
-// "$Id: table-as-container.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: table-as-container.cxx 9728 2012-11-20 18:32:59Z greg.ercolano $"
 //
 //	Show how FLTK widgets can be parented by Fl_Table. -erco 03/30/2003
 //
@@ -57,6 +57,7 @@ public:
   ~WidgetTable() { }
 
   void SetSize(int newrows, int newcols) {
+    clear();		// clear any previous widgets, if any
     rows(newrows);
     cols(newcols);
 
@@ -157,5 +158,5 @@ int main() {
 }
 
 //
-// End of "$Id: table-as-container.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: table-as-container.cxx 9728 2012-11-20 18:32:59Z greg.ercolano $".
 //

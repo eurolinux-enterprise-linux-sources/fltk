@@ -1,9 +1,9 @@
 //
-// "$Id: Fl_Browser.H 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: Fl_Browser.H 11453 2016-03-28 16:16:29Z AlbrechtS $"
 //
 // Browser header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2011 by Bill Spitzak and others.
+// Copyright 1998-2016 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -141,6 +141,17 @@ public:
   int size() const { return lines; }
   void size(int W, int H) { Fl_Widget::size(W, H); }
 
+  /**
+    Gets the default text size (in pixels) for the lines in the browser.
+  */
+  Fl_Fontsize textsize() const { return Fl_Browser_::textsize(); }
+
+  /*
+    Sets the default text size for the lines in the browser to newSize.
+    Defined and documented in Fl_Browser.cxx
+  */
+  void textsize(Fl_Fontsize newSize);
+
   int topline() const ;
   /** For internal use only? */
   enum Fl_Line_Position { TOP, BOTTOM, MIDDLE };
@@ -257,7 +268,7 @@ public:
     Example:
     \code
   Fl_Browser *b = new Fl_Browser(..);
-  int widths[] = { 50, 50, 50, 70, 70, 40, 40, 70, 70, 50, 0 };  // widths for each column
+  static int widths[] = { 50, 50, 50, 70, 70, 40, 40, 70, 70, 50, 0 };  // widths for each column
   b->column_widths(widths); // assign array to widget
   b->column_char('\t');     // use tab as the column character
   b->add("USER\tPID\tCPU\tMEM\tVSZ\tRSS\tTTY\tSTAT\tSTART\tTIME\tCOMMAND");
@@ -311,5 +322,5 @@ public:
 #endif
 
 //
-// End of "$Id: Fl_Browser.H 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: Fl_Browser.H 11453 2016-03-28 16:16:29Z AlbrechtS $".
 //

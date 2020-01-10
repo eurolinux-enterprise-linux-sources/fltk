@@ -1,5 +1,5 @@
 //
-// "$Id: fl_dnd_win32.cxx 9325 2012-04-05 05:12:30Z fabien $"
+// "$Id: fl_dnd_win32.cxx 11131 2016-02-07 10:10:52Z AlbrechtS $"
 //
 // Drag & Drop code for the Fast Light Tool Kit (FLTK).
 //
@@ -59,6 +59,7 @@ class FLDropTarget : public IDropTarget
   int px, py;
 public:
   FLDropTarget() : m_cRefCount(0) { } // initialize
+  virtual ~FLDropTarget() { }
   HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
     if (IID_IUnknown==riid || IID_IDropTarget==riid)
     {
@@ -133,6 +134,8 @@ public:
     }
     px = pt.x; py = pt.y;
     lastEffect = *pdwEffect;
+    // show insert position if dnd'ing in the same window/process (STR #3209)
+    Fl::flush();
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE DragLeave() {
@@ -314,6 +317,7 @@ class FLDropSource : public IDropSource
   DWORD m_cRefCount;
 public:
   FLDropSource() { m_cRefCount = 0; }
+  virtual ~FLDropSource() { }
   HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
     if (IID_IUnknown==riid || IID_IDropSource==riid)
     {
@@ -332,7 +336,7 @@ public:
       delete this;
     return nTemp;
   }
-  STDMETHODIMP GiveFeedback( ulong ) { return DRAGDROP_S_USEDEFAULTCURSORS; }
+  STDMETHODIMP GiveFeedback( DWORD ) { return DRAGDROP_S_USEDEFAULTCURSORS; }
   STDMETHODIMP QueryContinueDrag( BOOL esc, DWORD keyState ) {
     if ( esc )
       return DRAGDROP_S_CANCEL;
@@ -424,6 +428,7 @@ class FLDataObject : public IDataObject
   FLEnum *m_EnumF;
 public:
   FLDataObject() { m_cRefCount = 1; }// m_EnumF = new FLEnum();}
+  virtual ~FLDataObject() { }
   HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
     if (IID_IUnknown==riid || IID_IDataObject==riid)
     {
@@ -543,5 +548,5 @@ int Fl::dnd()
 }
 
 //
-// End of "$Id: fl_dnd_win32.cxx 9325 2012-04-05 05:12:30Z fabien $".
+// End of "$Id: fl_dnd_win32.cxx 11131 2016-02-07 10:10:52Z AlbrechtS $".
 //

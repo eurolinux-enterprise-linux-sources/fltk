@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_File_Chooser2.cxx 9551 2012-05-27 15:41:20Z manolo $"
+// "$Id: Fl_File_Chooser2.cxx 11813 2016-07-15 20:01:08Z AlbrechtS $"
 //
 // More Fl_File_Chooser routines.
 //
@@ -26,7 +26,13 @@
   
   \image html Fl_File_Chooser.jpg 
   \image latex  Fl_File_Chooser.jpg "Fl_File_Chooser" width=12cm
-  
+ 
+ The Fl_File_Chooser widget transmits UTF-8 encoded filenames to its user. It is
+ recommended to open files that may have non-ASCII names with the fl_fopen() or
+ fl_open() utility functions that handle these names in a cross-platform way 
+ (whereas the standard fopen()/open() functions fail on the MSWindows platform 
+ to open files with a non-ASCII name).
+ 
   The Fl_File_Chooser class also exports several static values
   that may be used to localize or customize the appearance of all file chooser
   dialogs:
@@ -373,7 +379,7 @@
 // File chooser label strings and sort function...
 //
 
-Fl_Preferences	Fl_File_Chooser::prefs_(Fl_Preferences::USER, "fltk.org", "filechooser");
+Fl_Preferences*	Fl_File_Chooser::prefs_ = NULL;
 
 const char	*Fl_File_Chooser::add_favorites_label = "Add to Favorites";
 const char	*Fl_File_Chooser::all_files_label = "All Files (*)";
@@ -404,6 +410,8 @@ static int	compare_dirnames(const char *a, const char *b);
 static void	quote_pathname(char *, const char *, int);
 static void	unquote_pathname(char *, const char *, int);
 
+// use platform dependent getenv() to get the home directory (STR #3166)
+static const char* get_homedir();
 
 //
 // 'Fl_File_Chooser::count()' - Return the number of selected files.
@@ -533,13 +541,13 @@ Fl_File_Chooser::favoritesButtonCB()
 
   if (!v) {
     // Add current directory to favorites...
-    if (getenv("HOME")) v = favoritesButton->size() - 5;
+    if (get_homedir()) v = favoritesButton->size() - 5;
     else v = favoritesButton->size() - 4;
 
     sprintf(menuname, "favorite%02d", v);
 
-    prefs_.set(menuname, directory_);
-    prefs_.flush();
+    prefs_->set(menuname, directory_);
+    prefs_->flush();
 
     quote_pathname(menuname, directory_, sizeof(menuname));
     favoritesButton->add(menuname);
@@ -582,7 +590,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
       // Get favorite directory 0 to 99...
       sprintf(name, "favorite%02d", i);
 
-      prefs_.get(name, pathname, "", sizeof(pathname));
+      prefs_->get(name, pathname, "", sizeof(pathname));
 
       // Stop on the first empty favorite...
       if (!pathname[0]) break;
@@ -661,7 +669,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
       // Set favorite directory 0 to 99...
       sprintf(name, "favorite%02d", i);
 
-      prefs_.set(name, favList->text(i + 1));
+      prefs_->set(name, favList->text(i + 1));
     }
 
     // Clear old entries as necessary...
@@ -669,14 +677,14 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
       // Clear favorite directory 0 to 99...
       sprintf(name, "favorite%02d", i);
 
-      prefs_.get(name, pathname, "", sizeof(pathname));
+      prefs_->get(name, pathname, "", sizeof(pathname));
 
-      if (pathname[0]) prefs_.set(name, "");
+      if (pathname[0]) prefs_->set(name, "");
       else break;
     }
 
     update_favorites();
-    prefs_.flush();
+    prefs_->flush();
 
     favWindow->hide();
   }
@@ -880,10 +888,10 @@ Fl_File_Chooser::fileNameCB()
 
 #if defined(WIN32) || defined(__EMX__)
     if (strcasecmp(pathname, directory_) &&
-        (pathname[0] || strcasecmp("/", directory_))) {
+        (pathname[0] || strcmp("/", directory_))) {
 #else
     if (strcmp(pathname, directory_) &&
-        (pathname[0] || strcasecmp("/", directory_))) {
+        (pathname[0] || strcmp("/", directory_))) {
 #endif // WIN32 || __EMX__
       int p = fileName->position();
       int m = fileName->mark();
@@ -1089,8 +1097,8 @@ Fl_File_Chooser::newdir()
 void Fl_File_Chooser::preview(int e)
 {
   previewButton->value(e);
-  prefs_.set("preview", e);
-  prefs_.flush();
+  prefs_->set("preview", e);
+  prefs_->flush();
 
   Fl_Group *p = previewBox->parent();
   if (e) {
@@ -1267,15 +1275,15 @@ Fl_File_Chooser::update_favorites()
   favoritesButton->add(add_favorites_label, FL_ALT + 'a', 0);
   favoritesButton->add(manage_favorites_label, FL_ALT + 'm', 0, 0, FL_MENU_DIVIDER);
   favoritesButton->add(filesystems_label, FL_ALT + 'f', 0);
-    
-  if ((home = getenv("HOME")) != NULL) {
+
+  if ((home = get_homedir()) != NULL) {
     quote_pathname(menuname, home, sizeof(menuname));
     favoritesButton->add(menuname, FL_ALT + 'h', 0);
   }
 
   for (i = 0; i < 100; i ++) {
     sprintf(menuname, "favorite%02d", i);
-    prefs_.get(menuname, pathname, "", sizeof(pathname));
+    prefs_->get(menuname, pathname, "", sizeof(pathname));
     if (!pathname[0]) break;
 
     quote_pathname(menuname, pathname, sizeof(menuname));
@@ -1396,7 +1404,7 @@ Fl_File_Chooser::update_preview()
     if (*ptr || ptr == preview_text_) {
       for (ptr = preview_text_;
          *ptr && (isprint(*ptr & 255) || isspace(*ptr & 255));
-	 ptr ++);
+	 ptr ++) {/*empty*/}
     }
 
     if (*ptr || ptr == preview_text_) {
@@ -1417,6 +1425,16 @@ Fl_File_Chooser::update_preview()
       previewBox->labelsize(size);
       previewBox->labelfont(FL_COURIER);
     }
+  } else if (image && ( (image->w() <= 0) ||
+                        (image->h() <= 0) ||
+                        (image->d() < 0)  ||
+                        (image->count() <= 0))) {
+    // Image has errors? Show big 'X'
+    previewBox->label("X");
+    previewBox->align(FL_ALIGN_CLIP);
+    previewBox->labelsize(70);
+    previewBox->labelfont(FL_HELVETICA);
+    previewBox->redraw();
   } else if (image) {
     pbw = previewBox->w() - 20;
     pbh = previewBox->h() - 20;
@@ -1650,18 +1668,22 @@ quote_pathname(char       *dst,		// O - Destination string
                const char *src,		// I - Source string
 	       int        dstsize)	// I - Size of destination string
 {
-  dstsize --;
+  dstsize--; // prepare for trailing zero
 
   while (*src && dstsize > 1) {
     if (*src == '\\') {
       // Convert backslash to forward slash...
       *dst++ = '\\';
       *dst++ = '/';
+      dstsize -= 2;
       src ++;
     } else {
-      if (*src == '/') *dst++ = '\\';
-
+      if (*src == '/') {
+	*dst++ = '\\';
+	dstsize--;
+      }
       *dst++ = *src++;
+      dstsize--;
     }
   }
 
@@ -1678,17 +1700,35 @@ unquote_pathname(char       *dst,	// O - Destination string
                  const char *src,	// I - Source string
 	         int        dstsize)	// I - Size of destination string
 {
-  dstsize --;
+  dstsize--; // prepare for trailing zero
 
-  while (*src && dstsize > 1) {
-    if (*src == '\\') src ++;
+  while (*src && dstsize > 0) {
+    if (*src == '\\') src++;
     *dst++ = *src++;
+    dstsize--;
   }
 
   *dst = '\0';
 }
 
+//
+// 'get_homedir()' - Try to find the home directory (platform dependent).
+
+static const char*
+get_homedir() {
+
+  const char *home = fl_getenv("HOME");
+
+#ifdef WIN32
+
+  if (!home) home = fl_getenv("UserProfile");
+
+#endif // WIN32
+
+  return home;
+}
+
 
 //
-// End of "$Id: Fl_File_Chooser2.cxx 9551 2012-05-27 15:41:20Z manolo $".
+// End of "$Id: Fl_File_Chooser2.cxx 11813 2016-07-15 20:01:08Z AlbrechtS $".
 //

@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_Pixmap.H 9421 2012-05-01 14:33:30Z manolo $"
+// "$Id: Fl_Pixmap.H 9706 2012-11-06 20:46:14Z matt $"
 //
 // Pixmap header file for the Fast Light Tool Kit (FLTK).
 //
@@ -60,7 +60,7 @@ class FL_EXPORT Fl_Pixmap : public Fl_Image {
   private:
 
 #if defined(WIN32)
-#if FLTK_ABI_VERSION < 10302
+#if FLTK_ABI_VERSION < 10301
   static // a static member is needed for ABI compatibility
 #endif
   UINT pixmap_bg_color; // RGB color used for pixmap background
@@ -98,5 +98,5 @@ class FL_EXPORT Fl_Pixmap : public Fl_Image {
 #endif
 
 //
-// End of "$Id: Fl_Pixmap.H 9421 2012-05-01 14:33:30Z manolo $".
+// End of "$Id: Fl_Pixmap.H 9706 2012-11-06 20:46:14Z matt $".
 //

@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_JPEG_Image.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: Fl_JPEG_Image.cxx 10743 2015-06-07 06:21:40Z manolo $"
 //
 // Fl_JPEG_Image routines.
 //
@@ -28,6 +28,7 @@
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/fl_utf8.h>
+#include <FL/Fl.H>
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,8 +88,11 @@ extern "C" {
  The inherited destructor frees all memory and server resources that are used 
  by the image.
  
- There is no error function in this class. If the image has loaded correctly, 
- w(), h(), and d() should return values greater zero.
+ Use Fl_Image::fail() to check if Fl_JPEG_Image failed to load. fail() returns
+ ERR_FILE_ACCESS if the file could not be opened or read, ERR_FORMAT if the
+ JPEG format could not be decoded, and ERR_NO_IMAGE if the image could not
+ be loaded for another reason. If the image has loaded correctly,
+ w(), h(), and d() should return values greater than zero.
  
  \param[in] filename a full path and name pointing to a valid jpeg file.
  */
@@ -110,7 +114,10 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *filename)	// I - File to load
   array = (uchar *)0;
   
   // Open the image file...
-  if ((fp = fl_fopen(filename, "rb")) == NULL) return;
+  if ((fp = fl_fopen(filename, "rb")) == NULL) {
+    ld(ERR_FILE_ACCESS);
+    return;
+  }
   
   // Setup the decompressor info and read the header...
   dinfo.err                = jpeg_std_error((jpeg_error_mgr *)&jerr);
@@ -126,6 +133,7 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *filename)	// I - File to load
   if (setjmp(jerr.errhand_))
   {
     // JPEG error handling...
+    Fl::warning("JPEG file \"%s\" is too large or contains errors!\n", filename);
     // if any of the cleanup routines hits another error, we would end up 
     // in a loop. So instead, we decrement max_err for some upper cleanup limit.
     if ( ((*max_finish_decompress_err)-- > 0) && array)
@@ -148,12 +156,13 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *filename)	// I - File to load
     free(max_destroy_decompress_err);
     free(max_finish_decompress_err);
     
+    ld(ERR_FORMAT);
     return;
   }
   
   jpeg_create_decompress(&dinfo);
   jpeg_stdio_src(&dinfo, fp);
-  jpeg_read_header(&dinfo, 1);
+  jpeg_read_header(&dinfo, TRUE);
   
   dinfo.quantize_colors      = (boolean)FALSE;
   dinfo.out_color_space      = JCS_RGB;
@@ -166,6 +175,7 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *filename)	// I - File to load
   h(dinfo.output_height);
   d(dinfo.output_components);
   
+  if (((size_t)w()) * h() * d() > max_size() ) longjmp(jerr.errhand_, 1);
   array = new uchar[w() * h() * d()];
   alloc_array = 1;
   
@@ -209,35 +219,39 @@ typedef struct {
 typedef my_source_mgr *my_src_ptr;
 
 
-void init_source (j_decompress_ptr cinfo) {
-  my_src_ptr src = (my_src_ptr)cinfo->src;
-  src->s = src->data;
-}
+extern "C" {
 
-boolean fill_input_buffer(j_decompress_ptr cinfo) {
-  my_src_ptr src = (my_src_ptr)cinfo->src;
-  size_t nbytes = 4096;
-  src->pub.next_input_byte = src->s;
-  src->pub.bytes_in_buffer = nbytes;
-  src->s += nbytes;
-  return TRUE;
-}
-
-void term_source(j_decompress_ptr cinfo)
-{
-}
-
-void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
-  my_src_ptr src = (my_src_ptr)cinfo->src;
-  if (num_bytes > 0) {
-    while (num_bytes > (long)src->pub.bytes_in_buffer) {
-      num_bytes -= (long)src->pub.bytes_in_buffer;
-      fill_input_buffer(cinfo);
-    }
-    src->pub.next_input_byte += (size_t) num_bytes;
-    src->pub.bytes_in_buffer -= (size_t) num_bytes;
+  static void init_source(j_decompress_ptr cinfo) {
+    my_src_ptr src = (my_src_ptr)cinfo->src;
+    src->s = src->data;
   }
-}
+
+  static boolean fill_input_buffer(j_decompress_ptr cinfo) {
+    my_src_ptr src = (my_src_ptr)cinfo->src;
+    size_t nbytes = 4096;
+    src->pub.next_input_byte = src->s;
+    src->pub.bytes_in_buffer = nbytes;
+    src->s += nbytes;
+    return TRUE;
+  }
+
+  static void term_source(j_decompress_ptr cinfo)
+  {
+  }
+
+  static void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
+    my_src_ptr src = (my_src_ptr)cinfo->src;
+    if (num_bytes > 0) {
+      while (num_bytes > (long)src->pub.bytes_in_buffer) {
+        num_bytes -= (long)src->pub.bytes_in_buffer;
+        fill_input_buffer(cinfo);
+      }
+      src->pub.next_input_byte += (size_t) num_bytes;
+      src->pub.bytes_in_buffer -= (size_t) num_bytes;
+    }
+  }
+
+} // extern "C"
 
 static void jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char *data)
 {
@@ -268,8 +282,11 @@ static void jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char *data)
  The inherited destructor frees all memory and server resources that are used 
  by the image.
 
- There is no error function in this class. If the image has loaded correctly, 
- w(), h(), and d() should return values greater zero.
+ Use Fl_Image::fail() to check if Fl_JPEG_Image failed to load. fail() returns
+ ERR_FILE_ACCESS if the file could not be opened or read, ERR_FORMAT if the
+ JPEG format could not be decoded, and ERR_NO_IMAGE if the image could not
+ be loaded for another reason. If the image has loaded correctly,
+ w(), h(), and d() should return values greater than zero.
 
  \param name A unique name or NULL
  \param data A pointer to the memory location of the JPEG image
@@ -304,6 +321,7 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *name, const unsigned char *data)
   if (setjmp(jerr.errhand_))
   {
     // JPEG error handling...
+    Fl::warning("JPEG data is too large or contains errors!\n");
     // if any of the cleanup routines hits another error, we would end up 
     // in a loop. So instead, we decrement max_err for some upper cleanup limit.
     if ( ((*max_finish_decompress_err)-- > 0) && array)
@@ -329,7 +347,7 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *name, const unsigned char *data)
   
   jpeg_create_decompress(&dinfo);
   jpeg_mem_src(&dinfo, data);
-  jpeg_read_header(&dinfo, 1);
+  jpeg_read_header(&dinfo, TRUE);
   
   dinfo.quantize_colors      = (boolean)FALSE;
   dinfo.out_color_space      = JCS_RGB;
@@ -342,6 +360,7 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *name, const unsigned char *data)
   h(dinfo.output_height);
   d(dinfo.output_components);
   
+  if (((size_t)w()) * h() * d() > max_size() ) longjmp(jerr.errhand_, 1);
   array = new uchar[w() * h() * d()];
   alloc_array = 1;
   
@@ -368,5 +387,5 @@ Fl_JPEG_Image::Fl_JPEG_Image(const char *name, const unsigned char *data)
 }
 
 //
-// End of "$Id: Fl_JPEG_Image.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: Fl_JPEG_Image.cxx 10743 2015-06-07 06:21:40Z manolo $".
 //

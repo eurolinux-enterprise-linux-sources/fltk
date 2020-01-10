@@ -1,0 +1,20 @@
+diff --git a/fluid/Makefile b/fluid/Makefile
+index 2017210..d8c8385 100644
+--- a/fluid/Makefile
++++ b/fluid/Makefile
+@@ -84,7 +84,6 @@ install-linux:
+ 		$(INSTALL_DATA) icons/fluid-$$size.png $(DESTDIR)/usr/share/icons/hicolor/$${size}x$${size}/apps/fluid.png; \
+ 	done
+ 	-$(INSTALL_DIR) $(DESTDIR)/usr/share/mimelnk/application
+-	$(INSTALL_DATA) x-fluid.desktop  $(DESTDIR)/usr/share/mimelnk/application
+
+ install-osx:
+ 	echo Installing Fluid in $(DESTDIR)/Applications...
+@@ -104,7 +103,6 @@ uninstall:
+ uninstall-linux:
+ 	$(RM) $(DESTDIR)/usr/share/applications/fluid.desktop
+ 	$(RM) $(DESTDIR)/usr/share/icons/hicolor/*/fluid.png
+-	$(RM) $(DESTDIR)/usr/share/mimelnk/application/x-fluid.desktop
+
+ uninstall-osx:
+ 	$(RM) -r $(DESTDIR)/Applications/fluid.app

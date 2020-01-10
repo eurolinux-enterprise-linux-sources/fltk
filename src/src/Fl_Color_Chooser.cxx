@@ -1,5 +1,5 @@
 //
-// "$Id: Fl_Color_Chooser.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id: Fl_Color_Chooser.cxx 10234 2014-08-21 12:18:32Z cand $"
 //
 // Color chooser for the Fast Light Tool Kit (FLTK).
 //
@@ -91,7 +91,7 @@ enum {
   M_HEX,	/**< mode() of Fl_Color_Chooser showing hex values */
   M_HSV		/**< mode() of Fl_Color_Chooser showing HSV values */
 };
-static Fl_Menu_Item mode_menu[] = {
+static const Fl_Menu_Item mode_menu[] = {
   {"rgb"},
   {"byte"},
   {"hex"},
@@ -251,7 +251,7 @@ static void generate_image(void* vv, int X, int Y, int W, uchar* buf) {
   for (int x = X; x < X+W; x++) {
     double Xf = double(x)/iw;
     double H,S; tohs(Xf,Yf,H,S);
-    double r,g,b;
+    double r=0, g=0, b=0;
     Fl_Color_Chooser::hsv2rgb(H,S,V,r,g,b);
     *buf++ = uchar(255*r+.5);
     *buf++ = uchar(255*g+.5);
@@ -619,5 +619,5 @@ int fl_color_chooser(const char* name, uchar& r, uchar& g, uchar& b, int cmode) 
 
 /** @} */
 //
-// End of "$Id: Fl_Color_Chooser.cxx 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id: Fl_Color_Chooser.cxx 10234 2014-08-21 12:18:32Z cand $".
 //
